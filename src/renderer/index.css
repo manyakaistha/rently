@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@300..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #FFFFFF;
+  --color-fg: #000000;
+  --color-accent: #0066FF;
+  --color-success: #00FF00;
+  --color-warning: #FFFF00;
+  --color-error: #FF0000;
+  --color-border: #000000;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+
+  --shadow-neo: 8px 8px 0px #000000;
+  --shadow-neo-hover: 4px 4px 0px #000000;
+  --shadow-neo-sm: 4px 4px 0px #000000;
+
+  --border-width-neo: 4px;
+}
+
+body {
+  @apply bg-bg text-fg font-sans;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-display font-bold uppercase;
+}

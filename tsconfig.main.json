@@ -1,0 +1,24 @@
+{
+    "extends": "./tsconfig.node.json",
+    "compilerOptions": {
+        "composite": true,
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.main.tsbuildinfo",
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "strict": true,
+        "sourceMap": true,
+        "outDir": "dist-electron",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "verbatimModuleSyntax": false,
+        "noEmit": false,
+        "allowImportingTsExtensions": false
+    },
+    "include": [
+        "src/main/**/*",
+        "src/preload/**/*",
+        "src/shared/**/*"
+    ]
+}
