@@ -1,73 +1,169 @@
-# React + TypeScript + Vite
+# 📦 Device Rental Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, cross-platform desktop application for managing device rental businesses. Built with Electron, React, and TypeScript, featuring a neo-brutalist design aesthetic.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **📊 Dashboard** - Real-time overview of active rentals, inventory, and revenue
+- **📦 Inventory Management** - Track items with SKU, daily rates, deposits, and availability
+- **🆕 New Rental Creation** - Intuitive multi-item rental creation with dynamic pricing
+- **🔄 Ongoing Rentals** - Monitor active rentals with return date tracking
+- **🔍 Renter Search** - Quick lookup of rental history by customer name or phone
+- **⚙️ Settings** - Customize shop name, currency (₹ INR), and timezone
+- **📤 Excel Export/Import** - Backup and restore data with full Excel support
+- **🗄️ SQLite Database** - Fast, reliable local data storage
+- **🎨 Neo-Brutalist UI** - Bold, modern design with "Darker Grotesque" typography
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [Electron](https://www.electronjs.org/) ^33.0.0
+- **Frontend**: [React](https://react.dev/) ^19.2.0 + [TypeScript](https://www.typescriptlang.org/)
+- **Routing**: [React Router](https://reactrouter.com/) v7
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4
+- **Database**: [SQLite](https://www.sqlite.org/) via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Build Tool**: [Vite](https://vite.dev/)
+- **Packaging**: [electron-builder](https://www.electron.build/)
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Node.js** 18+ (LTS recommended)
+- **npm** or **yarn**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/device-rental-app.git
+cd device-rental-app
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+The app will launch in development mode with hot-reload enabled.
+
+## 📦 Building for Production
+
+### Build for Current Platform
+```bash
+npm run dist
+```
+
+### Build for Specific Platforms
+```bash
+# Windows (NSIS installer + portable)
+npm run dist:win
+
+# macOS (DMG + ZIP)
+npm run dist:mac
+
+# Linux (AppImage, .deb, .rpm)
+npm run dist:linux
+```
+
+Installers will be created in the `release/` directory.
+
+## 🗂️ Project Structure
+
+```
+device-rental-app/
+├── src/
+│   ├── main/              # Electron main process
+│   │   ├── index.ts       # Main entry point
+│   │   ├── db.ts          # Database initialization
+│   │   ├── schema.ts      # Drizzle ORM schema
+│   │   ├── ipc-handlers.ts # IPC communication
+│   │   └── excel.ts       # Excel import/export
+│   ├── preload/           # Preload scripts
+│   │   └── preload.ts     # Context bridge
+│   ├── renderer/          # React frontend
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Page components
+│   │   ├── context/       # React Context (global state)
+│   │   └── App.tsx        # Main React app
+│   └── shared/            # Shared types
+├── public/                # Static assets
+├── dist/                  # Vite build output
+├── dist-electron/         # Electron build output
+└── release/               # Production installers
+```
+
+## 💾 Database Schema
+
+The app uses SQLite with the following tables:
+
+- **items** - Rental inventory (name, SKU, daily rate, deposit)
+- **rentals** - Rental transactions (renter info, dates, status)
+- **rentalItems** - Junction table for rental line items
+- **shopSettings** - Shop configuration (name, currency, timezone)
+- **auditLog** - Change history tracking
+
+## 🎨 Design Philosophy
+
+The app features a **neo-brutalist** design with:
+- Bold, thick borders (`border-4`)
+- Strong shadows (`shadow-neo`)
+- High-contrast colors (purple accents, white backgrounds)
+- "Darker Grotesque" display font
+- Uppercase headings and labels
+
+## 🌍 Localization
+
+- **Currency**: Currently supports INR (₹) with easy customization
+- **Timezone**: Configurable timezone for rental date tracking
+- **Date Format**: ISO format with locale-aware display
+
+## 📊 Data Management
+
+### Export
+Export all data (items, rentals, settings) to Excel:
+```
+Settings → Backup Data → Export to Excel
+```
+
+### Import
+Import data from Excel with two modes:
+- **Add New**: Append records (skips duplicates)
+- **Overwrite**: Replace all data (creates automatic backup)
+
+### Backups
+Automatic backups are created before data overwrites in:
+```
+~/Library/Application Support/device-rental-app/backups/
+```
+
+## 🔧 Development Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run lint         # Run ESLint
+npm run pack         # Create unpacked build (testing)
+npm run dist         # Create installer for current platform
+```
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 🐛 Issues
+
+Found a bug? Please open an issue on [GitHub Issues](https://github.com/yourusername/device-rental-app/issues).
+
+---
+
+Built with ❤️ using Electron and React
