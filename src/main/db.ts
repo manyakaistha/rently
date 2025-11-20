@@ -31,10 +31,18 @@ export function initDB() {
       daily_rate INTEGER NOT NULL,
       deposit_amount INTEGER,
       is_active INTEGER NOT NULL DEFAULT 1,
+      stock INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
   `);
+
+  // Migration: Add stock column if it doesn't exist
+  try {
+    sqlite.exec(`ALTER TABLE items ADD COLUMN stock INTEGER NOT NULL DEFAULT 0`);
+  } catch (error) {
+    // Ignore error if column already exists
+  }
 
   // Rentals
   sqlite.exec(`

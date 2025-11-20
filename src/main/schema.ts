@@ -8,6 +8,7 @@ export const items = sqliteTable('items', {
     dailyRate: integer('daily_rate').notNull(), // cents
     depositAmount: integer('deposit_amount'),
     isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+    stock: integer('stock').notNull().default(0),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
 });

@@ -105,13 +105,25 @@ const NewRental: React.FC = () => {
             navigate('/ongoing-rentals');
         } catch (error) {
             console.error(error);
-            alert('Failed to create rental');
+            const errorMessage = error instanceof Error ? error.message : 'Failed to create rental';
+            alert(errorMessage);
         }
     };
 
     // Update price placeholder when item selected
     const selectedItem = items.find(i => i.id === selectedItemId);
     const defaultPrice = selectedItem ? (selectedItem.dailyRate / 100).toFixed(2) : '';
+
+    // Calculate available stock (accounting for items already in cart)
+    const getAvailableStock = (itemId: string) => {
+        const item = items.find(i => i.id === itemId);
+        if (!item) return 0;
+        const inCart = cart.filter(c => c.itemId === itemId).reduce((sum, c) => sum + c.quantity, 0);
+        return item.stock - inCart;
+    };
+
+    const availableStock = selectedItemId ? getAvailableStock(selectedItemId) : null;
+    const stockWarning = availableStock !== null && quantity > availableStock;
 
     return (
         <div>
@@ -165,11 +177,25 @@ const NewRental: React.FC = () => {
                 {/* Right Column: Items & Cart */}
                 <div className="col-span-2">
                     <Card title="Add Items">
+                        {stockWarning && (
+                            <div className="mb-4 p-4 bg-warning border-4 border-black flex items-center gap-3">
+                                <span className="text-3xl">⚠️</span>
+                                <div>
+                                    <p className="font-display font-bold text-sm uppercase">Stock Alert</p>
+                                    <p className="font-sans text-sm">
+                                        Only <strong>{availableStock}</strong> units available for <strong>{selectedItem?.name}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                         <div className="grid grid-cols-12 gap-4 items-end">
                             <div className="col-span-5">
                                 <Select
                                     label="Select Item"
-                                    options={items.map(i => ({ value: i.id, label: `${i.name} (${i.sku})` }))}
+                                    options={items.map(i => ({
+                                        value: i.id,
+                                        label: `${i.name} (${i.sku}) - Stock: ${i.stock}`
+                                    }))}
                                     value={selectedItemId}
                                     onChange={(e) => setSelectedItemId(e.target.value)}
                                     className="mb-0"
@@ -244,9 +270,9 @@ const NewRental: React.FC = () => {
                             <Button size="lg" onClick={handleSubmit}>Confirm Rental</Button>
                         </div>
                     </Card>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };
 

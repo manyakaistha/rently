@@ -9,12 +9,14 @@ const Items: React.FC = () => {
     const [items, setItems] = useState<Item[]>([]);
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<Item | null>(null);
     const [newItem, setNewItem] = useState({
         name: '',
         sku: '',
         description: '',
         dailyRate: '',
         depositAmount: '',
+        stock: '',
     });
 
     useEffect(() => {
@@ -42,8 +44,26 @@ const Items: React.FC = () => {
         }
     };
 
-    const handleCreate = async () => {
-        console.log('handleCreate called', newItem);
+    const openEditModal = (item: Item) => {
+        setEditingItem(item);
+        setNewItem({
+            name: item.name,
+            sku: item.sku,
+            description: item.description || '',
+            dailyRate: (item.dailyRate / 100).toString(),
+            depositAmount: item.depositAmount ? (item.depositAmount / 100).toString() : '',
+            stock: item.stock.toString(),
+        });
+        setIsModalOpen(true);
+    };
+
+    const openCreateModal = () => {
+        setEditingItem(null);
+        setNewItem({ name: '', sku: '', description: '', dailyRate: '', depositAmount: '', stock: '' });
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async () => {
         if (!newItem.name || !newItem.sku || !newItem.dailyRate) {
             alert('Please fill in required fields (Name, SKU, Daily Rate)');
             return;
@@ -61,22 +81,36 @@ const Items: React.FC = () => {
             return;
         }
 
+        const stock = newItem.stock ? parseInt(newItem.stock) : 0;
+        if (newItem.stock && isNaN(stock)) {
+            alert('Stock must be a valid number');
+            return;
+        }
+
         try {
-            await window.api.items.create({
+            const itemData = {
                 name: newItem.name,
                 sku: newItem.sku,
                 description: newItem.description || null,
                 dailyRate: Math.round(rate * 100), // Convert to cents
                 depositAmount: newItem.depositAmount ? Math.round(deposit * 100) : null,
+                stock: stock,
                 isActive: true,
-            });
+            };
+
+            if (editingItem) {
+                await window.api.items.update({ ...itemData, id: editingItem.id });
+            } else {
+                await window.api.items.create(itemData);
+            }
 
             setIsModalOpen(false);
-            setNewItem({ name: '', sku: '', description: '', dailyRate: '', depositAmount: '' });
+            setEditingItem(null);
+            setNewItem({ name: '', sku: '', description: '', dailyRate: '', depositAmount: '', stock: '' });
             loadItems();
         } catch (error) {
-            console.error('Failed to create item:', error);
-            alert(`Failed to create item: ${error instanceof Error ? error.message : String(error)}`);
+            console.error('Failed to save item:', error);
+            alert(`Failed to save item: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
 
@@ -94,7 +128,7 @@ const Items: React.FC = () => {
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     />
                     <Button onClick={handleSearch}>Search</Button>
-                    <Button onClick={() => setIsModalOpen(true)}>Add Item</Button>
+                    <Button onClick={openCreateModal}>Add Item</Button>
                 </div>
             </div>
 
@@ -106,6 +140,7 @@ const Items: React.FC = () => {
                             <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">SKU</th>
                             <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">Daily Rate</th>
                             <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">Deposit</th>
+                            <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">Stock</th>
                             <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">Status</th>
                             <th className="bg-purple-100 p-3 text-left border-2 border-border font-display font-bold text-xs uppercase">Actions</th>
                         </tr>
@@ -124,13 +159,17 @@ const Items: React.FC = () => {
                                     <td className="p-3 border-2 border-border font-mono text-sm">{item.sku}</td>
                                     <td className="p-3 border-2 border-border">₹{(item.dailyRate / 100).toFixed(2)}</td>
                                     <td className="p-3 border-2 border-border">{item.depositAmount ? `₹${(item.depositAmount / 100).toFixed(2)}` : '-'}</td>
+                                    <td className="p-3 border-2 border-border font-mono">{item.stock}</td>
                                     <td className="p-3 border-2 border-border">
                                         <span className={`px-2 py-1 font-bold text-xs uppercase border-2 border-black ${item.isActive ? 'bg-success text-black' : 'bg-error text-white'}`}>
                                             {item.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
                                     <td className="p-3 border-2 border-border">
-                                        <Button size="sm" variant="danger" onClick={() => handleDelete(item.id)}>Delete</Button>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" variant="secondary" onClick={() => openEditModal(item)}>Edit</Button>
+                                            <Button size="sm" variant="danger" onClick={() => handleDelete(item.id)}>Delete</Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -142,11 +181,11 @@ const Items: React.FC = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Add New Item"
+                title={editingItem ? "Edit Item" : "Add New Item"}
                 footer={
                     <>
                         <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreate}>Save Item</Button>
+                        <Button onClick={handleSave}>{editingItem ? "Update Item" : "Save Item"}</Button>
                     </>
                 }
             >
@@ -183,6 +222,12 @@ const Items: React.FC = () => {
                         onChange={(e) => setNewItem({ ...newItem, depositAmount: e.target.value })}
                     />
                 </div>
+                <Input
+                    label="Stock Quantity"
+                    type="number"
+                    value={newItem.stock}
+                    onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })}
+                />
             </Modal>
         </div>
     );

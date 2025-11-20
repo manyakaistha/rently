@@ -6,6 +6,7 @@ export interface Item {
     dailyRate: number;
     depositAmount: number | null;
     isActive: boolean;
+    stock: number;
     createdAt: number;
     updatedAt: number;
 }

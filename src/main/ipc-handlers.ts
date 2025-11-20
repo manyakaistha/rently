@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { db } from './db';
 import { items, rentals, rentalItems, shopSettings } from './schema';
-import { eq, like, desc, or } from 'drizzle-orm';
+import { eq, like, desc, or, sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { exportToExcel, importFromExcel } from './excel';
 
@@ -17,11 +17,21 @@ export function registerIpcHandlers() {
         const newItem = {
             id,
             ...data,
+            stock: data.stock || 0,
             createdAt: now,
             updatedAt: now,
         };
         db.insert(items).values(newItem).run();
         return newItem;
+    });
+
+    ipcMain.handle('items:update', async (_, data) => {
+        const { id, ...updates } = data;
+        db.update(items)
+            .set({ ...updates, updatedAt: Date.now() })
+            .where(eq(items.id, id))
+            .run();
+        return true;
     });
 
     ipcMain.handle('items:search', async (_, query) => {
@@ -45,6 +55,15 @@ export function registerIpcHandlers() {
 
         // Transaction
         db.transaction((tx) => {
+            // Check stock first
+            for (const item of rItems) {
+                const dbItem = tx.select().from(items).where(eq(items.id, item.itemId)).get();
+                if (!dbItem) throw new Error(`Item not found: ${item.itemId}`);
+                if (dbItem.stock < item.quantity) {
+                    throw new Error(`Insufficient stock for item: ${dbItem.name}. Available: ${dbItem.stock}, Requested: ${item.quantity}`);
+                }
+            }
+
             // Create Rental
             tx.insert(rentals).values({
                 id: rentalId,
@@ -53,7 +72,7 @@ export function registerIpcHandlers() {
                 updatedAt: now,
             }).run();
 
-            // Create Rental Items
+            // Create Rental Items and Update Stock
             for (const item of rItems) {
                 tx.insert(rentalItems).values({
                     id: ulid(),
@@ -63,6 +82,15 @@ export function registerIpcHandlers() {
                     pricePerUnit: item.pricePerUnit,
                     subtotal: item.subtotal,
                 }).run();
+
+                // Decrement stock
+                tx.update(items)
+                    .set({
+                        stock: sql`stock - ${item.quantity}`,
+                        updatedAt: now
+                    })
+                    .where(eq(items.id, item.itemId))
+                    .run();
             }
         });
 
@@ -104,14 +132,31 @@ export function registerIpcHandlers() {
     });
 
     ipcMain.handle('rentals:markReturned', async (_, { id, returnDate }) => {
-        db.update(rentals)
-            .set({
-                status: 'returned',
-                actualReturnDate: returnDate,
-                updatedAt: Date.now()
-            })
-            .where(eq(rentals.id, id))
-            .run();
+        db.transaction((tx) => {
+            // Update rental status
+            tx.update(rentals)
+                .set({
+                    status: 'returned',
+                    actualReturnDate: returnDate,
+                    updatedAt: Date.now()
+                })
+                .where(eq(rentals.id, id))
+                .run();
+
+            // Get items for this rental to restore stock
+            const rItems = tx.select().from(rentalItems).where(eq(rentalItems.rentalId, id)).all();
+
+            // Increment stock
+            for (const item of rItems) {
+                tx.update(items)
+                    .set({
+                        stock: sql`stock + ${item.quantity}`,
+                        updatedAt: Date.now()
+                    })
+                    .where(eq(items.id, item.itemId))
+                    .run();
+            }
+        });
         return true;
     });
 

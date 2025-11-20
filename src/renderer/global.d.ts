@@ -4,6 +4,7 @@ export interface Api {
     items: {
         getAll: () => Promise<Item[]>;
         create: (data: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Item>;
+        update: (data: Partial<Item> & { id: string }) => Promise<boolean>;
         search: (query: string) => Promise<Item[]>;
         delete: (id: string) => Promise<boolean>;
     };

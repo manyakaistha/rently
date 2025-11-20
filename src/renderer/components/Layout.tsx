@@ -46,7 +46,7 @@ const Layout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-10 max-w-[1400px]">
+            <main className="flex-1 p-10 max-w-[1400px] overflow-y-auto">
                 <Outlet />
             </main>
         </div>

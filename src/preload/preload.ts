@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
     items: {
         getAll: () => ipcRenderer.invoke('items:getAll'),
         create: (data: any) => ipcRenderer.invoke('items:create', data),
+        update: (data: any) => ipcRenderer.invoke('items:update', data),
         search: (query: string) => ipcRenderer.invoke('items:search', query),
         delete: (id: string) => ipcRenderer.invoke('items:delete', id),
     },
