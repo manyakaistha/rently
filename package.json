@@ -4,6 +4,10 @@
   "version": "1.1.0",
   "type": "module",
   "main": "dist-electron/src/main/index.js",
+  "author": {
+    "name": "Manya Kaistha",
+    "email": "manyakaistha.dev@gmail.com"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
     "dev:main": "cross-env NODE_ENV=development electron .",
@@ -48,11 +52,11 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb",
-        "rpm"
+        "deb"
       ],
       "icon": "public/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "Manya Kaistha <manyakaistha.dev@gmail.com>"
     },
     "nsis": {
       "oneClick": false,
