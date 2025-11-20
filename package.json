@@ -1,7 +1,7 @@
 {
   "name": "device-rental-app",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "main": "dist-electron/src/main/index.js",
   "scripts": {
@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "com.rental.devicerentalapp",
-    "productName": "Device Rental Manager",
+    "productName": "Rently",
     "directories": {
       "output": "release"
     },
